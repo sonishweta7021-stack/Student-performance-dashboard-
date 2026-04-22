@@ -76,3 +76,4 @@ elif option == "Prediction":
             st.warning("Medium Risk")
         else:
             st.success("Low Risk")
+    
