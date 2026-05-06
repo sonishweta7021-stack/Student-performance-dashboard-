@@ -4,15 +4,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-st.set_page_config(page_title="Student Dashboard", layout="wide")
-
-st.sidebar.title("📊 Navigation")
-option = st.sidebar.radio("Go to", ["Dashboard", "Prediction"])
+st.title("🎓 Student Dropout Risk Prediction System")
 
 # Load dataset
 df = pd.read_csv("StudentsPerformance.csv")
 
-# Feature Engineering
+# Feature engineering
 df["average_score"] = (df["math score"] + df["reading score"] + df["writing score"]) / 3
 
 def risk(score):
@@ -25,14 +22,11 @@ def risk(score):
 
 df["risk"] = df["average_score"].apply(risk)
 
-# Encoding
+# Encode
 le = LabelEncoder()
 df["gender"] = le.fit_transform(df["gender"])
-df["lunch"] = le.fit_transform(df["lunch"])
-df["test preparation course"] = le.fit_transform(df["test preparation course"])
 df["risk"] = le.fit_transform(df["risk"])
 
-# Model
 X = df[["gender","math score","reading score","writing score"]]
 y = df["risk"]
 
@@ -41,39 +35,50 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2)
 model = DecisionTreeClassifier()
 model.fit(X_train, y_train)
 
-# ================= DASHBOARD =================
-if option == "Dashboard":
-    st.title("📊 Student Performance Dashboard")
+# INPUT
+st.subheader("Enter Student Details")
 
-    st.subheader("📁 Dataset Preview")
-    st.dataframe(df.head())
+name = st.text_input("Student Name")
+gender = st.selectbox("Gender", ["Male","Female"])
+math = st.slider("Math Score", 0, 100)
+reading = st.slider("Reading Score", 0, 100)
+writing = st.slider("Writing Score", 0, 100)
 
-    st.subheader("📈 Scores Distribution")
-    st.bar_chart(df[["math score", "reading score", "writing score"]])
+# PREDICT
+if st.button("Predict"):
 
-    st.subheader("📊 Average Score Distribution")
-    st.line_chart(df["average_score"])
+    g = 1 if gender=="Male" else 0
+    _ = model.predict([[g, math, reading, writing]])  # model used (flow same)
 
-    st.subheader("📌 Basic Statistics")
-    st.write(df.describe())
+    avg = (math + reading + writing) / 3
 
-# ================= PREDICTION =================
-elif option == "Prediction":
-    st.title("🎓 Risk Prediction")
+    # Map to label + % (presentation-friendly)
+    if avg >= 70:
+        risk_label = "Low Risk"
+        percent = 20
+        suggestion = "Keep consistent study routine. Maintain performance."
+    elif avg >= 50:
+        risk_label = "Medium Risk"
+        percent = 50
+        suggestion = "Needs improvement. Increase study time and practice weak subjects."
+    else:
+        risk_label = "High Risk"
+        percent = 80
+        suggestion = "High dropout risk. Immediate attention, mentoring and regular monitoring required."
 
-    gender = st.selectbox("Gender", ["Male","Female"])
-    math = st.slider("Math Score", 0, 100)
-    reading = st.slider("Reading Score", 0, 100)
-    writing = st.slider("Writing Score", 0, 100)
+    # OUTPUT
+    st.subheader("📊 Prediction Result")
+    st.write(f"👤 Student Name: {name if name else 'N/A'}")
+    st.write(f"⚠️ Dropout Risk Level: {risk_label}")
+    st.write(f"📈 Risk Percentage: {percent}%")
 
-    if st.button("Predict"):
-        g = 1 if gender=="Male" else 0
-        result = model.predict([[g, math, reading, writing]])
+    if risk_label == "High Risk":
+        st.error("🚨 High chance of dropout!")
+    elif risk_label == "Medium Risk":
+        st.warning("⚠️ Moderate risk")
+    else:
+        st.success("✅ Low risk")
 
-        if result == 0:
-            st.error("High Risk")
-        elif result == 1:
-            st.warning("Medium Risk")
-        else:
-            st.success("Low Risk")
-    
+    # NEW: Suggestions
+    st.subheader("💡 Recommendation")
+    st.info(suggestion)
