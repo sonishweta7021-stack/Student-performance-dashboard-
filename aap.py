@@ -15,11 +15,11 @@ df["average_score"] = (df["math score"] + df["reading score"] + df["writing scor
 
 def risk(score):
     if score >= 70:
-        return "Low Risk"
+        return "Low Dropout Risk"
     elif score >= 50:
-        return "Medium Risk"
+        return "Medium Dropout Risk"
     else:
-        return "High Risk"
+        return "High Dropout Risk"
 
 df["risk"] = df["average_score"].apply(risk)
 
@@ -75,30 +75,30 @@ if menu == "Prediction":
         avg = (math + reading + writing) / 3
 
         if avg >= 70:
-            risk_label = "Low Risk"
+            risk_label = "Low Dropout Risk"
             percent = 20
             suggestion = "Keep consistent study routine."
         elif avg >= 50:
-            risk_label = "Medium Risk"
+            risk_label = "Medium Dropout Risk"
             percent = 50
             suggestion = "Needs improvement and regular practice."
         else:
-            risk_label = "High Risk"
+            risk_label = "High Dropout Risk"
             percent = 80
             suggestion = "High dropout risk. Immediate attention required."
 
         st.subheader("📊 Result")
 
         st.write(f"👤 Name: {name}")
-        st.write(f"⚠️ Risk Level: {risk_label}")
-        st.write(f"📈 Risk Percentage: {percent}%")
+        st.write(f"⚠️ Dropout Risk Level: {risk_label}")
+        st.write(f"📈 Dropout Risk Percentage: {percent}%")
 
-        if risk_label == "High Risk":
-            st.error("🚨 High Risk")
-        elif risk_label == "Medium Risk":
-            st.warning("⚠️ Medium Risk")
+        if risk_label == "High Dropout Risk":
+            st.error("🚨 High Dropout Risk")
+        elif risk_label == "Medium Dropout Risk":
+            st.warning("⚠️ Medium Dropout Risk")
         else:
-            st.success("✅ Low Risk")
+            st.success("✅ Low Dropout Risk")
 
         st.subheader("💡 Suggestion")
         st.info(suggestion)
