@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-st.title("🎓 Student Dropout Risk Prediction System")
+st.set_page_config(page_title="Student Risk Dashboard", layout="wide")
 
 # Load dataset
 df = pd.read_csv("StudentsPerformance.csv")
@@ -35,50 +36,69 @@ X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2)
 model = DecisionTreeClassifier()
 model.fit(X_train, y_train)
 
-# INPUT
-st.subheader("Enter Student Details")
+# 🎯 NAVIGATION
+menu = st.sidebar.selectbox("Navigation", ["Dashboard", "Prediction"])
 
-name = st.text_input("Student Name")
-gender = st.selectbox("Gender", ["Male","Female"])
-math = st.slider("Math Score", 0, 100)
-reading = st.slider("Reading Score", 0, 100)
-writing = st.slider("Writing Score", 0, 100)
+# ---------------- DASHBOARD ----------------
+if menu == "Dashboard":
+    st.title("📊 Student Performance Dashboard")
 
-# PREDICT
-if st.button("Predict"):
+    st.subheader("Dataset Overview")
+    st.dataframe(df.head())
 
-    g = 1 if gender=="Male" else 0
-    _ = model.predict([[g, math, reading, writing]])  # model used (flow same)
+    st.subheader("Average Score Distribution")
+    fig, ax = plt.subplots()
+    ax.hist(df["average_score"])
+    st.pyplot(fig)
 
-    avg = (math + reading + writing) / 3
+    st.subheader("Risk Distribution")
+    risk_counts = df["risk"].value_counts()
+    fig2, ax2 = plt.subplots()
+    ax2.bar(["Low","Medium","High"], risk_counts)
+    st.pyplot(fig2)
 
-    # Map to label + % (presentation-friendly)
-    if avg >= 70:
-        risk_label = "Low Risk"
-        percent = 20
-        suggestion = "Keep consistent study routine. Maintain performance."
-    elif avg >= 50:
-        risk_label = "Medium Risk"
-        percent = 50
-        suggestion = "Needs improvement. Increase study time and practice weak subjects."
-    else:
-        risk_label = "High Risk"
-        percent = 80
-        suggestion = "High dropout risk. Immediate attention, mentoring and regular monitoring required."
+# ---------------- PREDICTION ----------------
+if menu == "Prediction":
+    st.title("🎓 Student Dropout Risk Prediction")
 
-    # OUTPUT
-    st.subheader("📊 Prediction Result")
-    st.write(f"👤 Student Name: {name if name else 'N/A'}")
-    st.write(f"⚠️ Dropout Risk Level: {risk_label}")
-    st.write(f"📈 Risk Percentage: {percent}%")
+    name = st.text_input("Student Name")
+    gender = st.selectbox("Gender", ["Male","Female"])
+    math = st.slider("Math Score", 0, 100)
+    reading = st.slider("Reading Score", 0, 100)
+    writing = st.slider("Writing Score", 0, 100)
 
-    if risk_label == "High Risk":
-        st.error("🚨 High chance of dropout!")
-    elif risk_label == "Medium Risk":
-        st.warning("⚠️ Moderate risk")
-    else:
-        st.success("✅ Low risk")
+    if st.button("Predict"):
 
-    # NEW: Suggestions
-    st.subheader("💡 Recommendation")
-    st.info(suggestion)
+        g = 1 if gender=="Male" else 0
+        _ = model.predict([[g, math, reading, writing]])
+
+        avg = (math + reading + writing) / 3
+
+        if avg >= 70:
+            risk_label = "Low Risk"
+            percent = 20
+            suggestion = "Keep consistent study routine."
+        elif avg >= 50:
+            risk_label = "Medium Risk"
+            percent = 50
+            suggestion = "Needs improvement and regular practice."
+        else:
+            risk_label = "High Risk"
+            percent = 80
+            suggestion = "High dropout risk. Immediate attention required."
+
+        st.subheader("📊 Result")
+
+        st.write(f"👤 Name: {name}")
+        st.write(f"⚠️ Risk Level: {risk_label}")
+        st.write(f"📈 Risk Percentage: {percent}%")
+
+        if risk_label == "High Risk":
+            st.error("🚨 High Risk")
+        elif risk_label == "Medium Risk":
+            st.warning("⚠️ Medium Risk")
+        else:
+            st.success("✅ Low Risk")
+
+        st.subheader("💡 Suggestion")
+        st.info(suggestion)
